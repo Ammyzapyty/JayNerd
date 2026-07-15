@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from pymongo import MongoClient 
 from datetime import datetime, timedelta
 import os
+import certifi # <--- 1. เพิ่มบรรทัดนี้เข้ามา
 from keep_alive import keep_alive
 
 # ================= การตั้งค่า ID =================
@@ -11,10 +12,14 @@ ANNOUNCE_CHANNEL_ID = 1526962139145834586
 
 # ================= การตั้งค่า MongoDB =================
 MONGO_URL = os.environ.get("MONGO_URL")
-cluster = MongoClient(MONGO_URL)
+
+# 2. เพิ่ม tlsCAFile=certifi.where() เข้าไปในวงเล็บตามนี้เลยครับ
+cluster = MongoClient(MONGO_URL, tlsCAFile=certifi.where())
+
 db = cluster["discord_bot"] 
 collection = db["homework"] 
 # =================================================
+
 
 intents = discord.Intents.default()
 intents.message_content = True
