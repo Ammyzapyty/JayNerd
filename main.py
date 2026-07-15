@@ -2,15 +2,14 @@ import discord
 from discord.ext import commands, tasks
 from pymongo import MongoClient 
 from datetime import datetime, timedelta
-import os # <--- เพิ่ม import os สำหรับดึงค่าตัวแปรจาก Render
+import os
 from keep_alive import keep_alive
 
 # ================= การตั้งค่า ID =================
 INPUT_CHANNEL_ID = 1526962068211761304
 ANNOUNCE_CHANNEL_ID = 1526962139145834586
 
-# ================= การตั้งค่า MongoDB (สำหรับ Render) =================
-# ดึงลิงก์จาก Environment Variables บน Render
+# ================= การตั้งค่า MongoDB =================
 MONGO_URL = os.environ.get("MONGO_URL")
 cluster = MongoClient(MONGO_URL)
 db = cluster["discord_bot"] 
@@ -52,7 +51,6 @@ async def add_homework(ctx, subject: str, due_date: str, *, details: str):
         await ctx.send(embed=embed_error)
         return
 
-    # บันทึกลง MongoDB
     collection.insert_one({
         "subject": subject,
         "due_date": save_format,
@@ -170,7 +168,6 @@ async def delete_homework(ctx, index: int):
     )
     await ctx.send(embed=embed_success)
 
-# ลบคำสั่ง help ค่าเริ่มต้น
 bot.remove_command("help")
 
 # คำสั่ง !help
@@ -199,9 +196,7 @@ async def custom_help(ctx):
     embed.set_footer(text="💡 บอทจะแจ้งเตือนอัตโนมัติล่วงหน้า 2 วันก่อนถึงกำหนดส่ง")
     await ctx.send(embed=embed)
 
-# เอาเครื่องหมาย # ออกเพื่อให้เว็บเซิร์ฟเวอร์เริ่มทำงาน
 keep_alive() 
 
-# ดึง Token จาก Environment Variables ของ Render
 TOKEN = os.environ.get("DISCORD_TOKEN")
 bot.run(TOKEN)
