@@ -33,8 +33,8 @@ async def on_ready():
 # คำสั่งเพิ่มการบ้าน
 @bot.command(name="addhw")
 async def add_homework(ctx, subject: str, due_date: str, *, details: str):
-    #if ctx.channel.id != INPUT_CHANNEL_ID:
-    #    return
+    if ctx.channel.id != INPUT_CHANNEL_ID:
+        return
 
     now = datetime.now()
     try:
