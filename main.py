@@ -3,23 +3,24 @@ from discord.ext import commands, tasks
 from pymongo import MongoClient 
 from datetime import datetime, timedelta
 import os
-import certifi # <--- 1. เพิ่มบรรทัดนี้เข้ามา
+import certifi
 from keep_alive import keep_alive
+from dotenv import load_dotenv
+load_dotenv()
 
 # ================= การตั้งค่า ID =================
-INPUT_CHANNEL_ID = 1526962068211761304
-ANNOUNCE_CHANNEL_ID = 1526962139145834586
+# แนะนำให้ดึงจาก Environment Variable เพื่อความยืดหยุ่น หรือใส่ตรงๆ แบบเดิมก็ได้ครับ
+INPUT_CHANNEL_ID = int(os.environ.get("INPUT_CHANNEL_ID", 1526962068211761304))
+ANNOUNCE_CHANNEL_ID = int(os.environ.get("ANNOUNCE_CHANNEL_ID", 1526962139145834586))
 
 # ================= การตั้งค่า MongoDB =================
 MONGO_URL = os.environ.get("MONGO_URL")
 
-# 2. เพิ่ม tlsCAFile=certifi.where() เข้าไปในวงเล็บตามนี้เลยครับ
+# ใช้ certifi เพื่อจัดการเรื่อง SSL Certificate บน Cloud 
 cluster = MongoClient(MONGO_URL, tlsCAFile=certifi.where())
-
 db = cluster["discord_bot"] 
 collection = db["homework"] 
 # =================================================
-
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -28,7 +29,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"✅ ล็อกอินสำเร็จในชื่อ {bot.user}")
-    check_homework.start()
+    if not check_homework.is_running():
+        check_homework.start()
 
 # คำสั่งเพิ่มการบ้าน
 @bot.command(name="addhw")
@@ -116,7 +118,7 @@ async def list_homework(ctx):
     if not pending_hw:
         embed_empty = discord.Embed(
             title="🎉 ไม่มีกานบ้านค้างส่ง!",
-            description="เย้! ตอนนี้ไม่มีการบ้านที่ต้องส่งเลย พักผ่อนได้เต็มที่ครับ",
+            description="สวยจัด ตอนนี้ไม่มีการบ้านที่ต้องส่งเลย มาๆเล่นเกม",
             color=discord.Color.from_rgb(46, 204, 113) 
         )
         await ctx.send(embed=embed_empty)
@@ -146,7 +148,7 @@ async def delete_homework(ctx, index: int):
     if not pending_hw:
         embed_empty = discord.Embed(
             title="❌ ไม่พบข้อมูลการบ้าน",
-            description="ตอนนี้ไม่มีการบ้านในระบบให้ลบครับ",
+            description="ตอนนี้ไม่มีการบ้านในระบบให้ลบ",
             color=discord.Color.orange()
         )
         await ctx.send(embed=embed_empty)
@@ -157,7 +159,7 @@ async def delete_homework(ctx, index: int):
     if index < 1 or index > len(pending_hw):
         embed_error = discord.Embed(
             title="⚠️ ลำดับไม่ถูกต้อง",
-            description=f"ไม่พบการบ้านลำดับที่ **{index}** ครับ (ตอนนี้มีการบ้านทั้งหมด {len(pending_hw)} งาน)",
+            description=f"ไม่พบการบ้านลำดับที่ **{index}** นะ (ตอนนี้มีการบ้านทั้งหมด {len(pending_hw)} งาน)",
             color=discord.Color.red()
         )
         await ctx.send(embed=embed_error)
@@ -179,7 +181,7 @@ bot.remove_command("help")
 @bot.command(name="help", aliases=["วิธีใช้"])
 async def custom_help(ctx):
     embed = discord.Embed(
-        title="📚 คู่มือการใช้งานบอทการบ้าน",
+        title="📚 คู่มือการใช้งานเจย์ให้จดงาน",
         description="รวบรวมคำสั่งทั้งหมดสำหรับจัดการการบ้าน",
         color=discord.Color.blue()
     )
@@ -198,9 +200,10 @@ async def custom_help(ctx):
         value="**ใช้ทำอะไร:** ลบการบ้านที่พิมพ์ผิดออกจากลิสต์\n**เงื่อนไข:** ดูลำดับที่ได้จากคำสั่ง `!listhw` ก่อน\n**ตัวอย่าง:** `!delhw 1`",
         inline=False
     )
-    embed.set_footer(text="💡 บอทจะแจ้งเตือนอัตโนมัติล่วงหน้า 2 วันก่อนถึงกำหนดส่ง")
+    embed.set_footer(text="💡 เจย์จะแจ้งเตือนอัตโนมัติล่วงหน้า 2 วันก่อนถึงกำหนดส่ง")
     await ctx.send(embed=embed)
 
+# เปิดใช้งานเซิร์ฟเวอร์ Flask เพื่อให้ Render ตรวจสอบสถานะได้
 keep_alive() 
 
 TOKEN = os.environ.get("DISCORD_TOKEN")
