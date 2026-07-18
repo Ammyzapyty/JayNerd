@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 import os
 import certifi
 from keep_alive import keep_alive
-from dotenv import load_dotenv
-load_dotenv()
+#from dotenv import load_dotenv
+#load_dotenv()
 
 # ================= การตั้งค่า ID =================
 # แนะนำให้ดึงจาก Environment Variable เพื่อความยืดหยุ่น หรือใส่ตรงๆ แบบเดิมก็ได้ครับ
